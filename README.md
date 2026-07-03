@@ -24,7 +24,7 @@ It converts daily habits into:
 1. Clone or download the repository
 
 ```bash
-cd c:\Users\neeru\OneDrive\Desktop\eco-buddy-ai\eco-buddy-ai
+cd eco-buddy-ai
 ```
 
 2. Create a virtual environment (recommended)

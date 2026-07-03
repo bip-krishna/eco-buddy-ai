@@ -1,3 +1,4 @@
+import html
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,6 +11,10 @@ from reportlab.lib.styles import getSampleStyleSheet
 from database import init_db, save_assessment, get_assessments
 from emissions import calculate_footprint, calculate_eco_score
 from recommendations import generate_recommendations
+
+
+def h(text):
+    return html.escape(str(text))
 
 
 # -------------------------
@@ -840,7 +845,7 @@ if analyze_btn:
                 <div style='font-size: 32px;'>💡</div>
                 <div style='flex: 1;'>
                     <div style='font-size: 16px; font-weight: 800; color: #4ade80; margin-bottom: 12px;'>Key Finding</div>
-                    <div style='font-size: 15px; color: #d1d5db; line-height: 1.8;'>{insight}</div>
+                    <div style='font-size: 15px; color: #d1d5db; line-height: 1.8;'>{h(insight)}</div>
                 </div>
             </div>
         </div>
@@ -878,7 +883,7 @@ if analyze_btn:
                 <div style='display: flex; gap: 12px;'>
                     <div style='font-size: 24px;'>💚</div>
                     <div style='flex: 1;'>
-                        <div style='font-size: 15px; line-height: 1.8; color: #d1d5db;'>{r}</div>
+                        <div style='font-size: 15px; line-height: 1.8; color: #d1d5db;'>{h(r)}</div>
                     </div>
                 </div>
             </div>
