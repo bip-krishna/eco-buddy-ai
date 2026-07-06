@@ -24,7 +24,7 @@ It converts daily habits into:
 1. Clone or download the repository
 
 ```bash
-cd c:\Users\neeru\OneDrive\Desktop\eco-buddy-ai\eco-buddy-ai
+cd eco-buddy-ai
 ```
 
 2. Create a virtual environment (recommended)
@@ -116,9 +116,12 @@ Help users understand their carbon footprint and encourage sustainable lifestyle
 ---
 
 # Testing
+
+```bash
 python test_db.py
 python test_emissions.py
 python test_recommendations.py
+```
 
 ---
 

@@ -1,3 +1,4 @@
+import html
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -12,537 +13,559 @@ from emissions import calculate_footprint, calculate_eco_score
 from recommendations import generate_recommendations
 
 
+def h(text):
+    return html.escape(str(text))
+
+
 # -------------------------
 # INIT
 # -------------------------
+
 init_db()
 
 st.set_page_config(
-    page_title="EcoBuddy 🌱",
+    page_title="EcoBuddy",
     page_icon="🌱",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 
 # -------------------------
-# ADVANCED STYLING
+# REFERENCE-INSPIRED ADVANCED STYLING
 # -------------------------
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --sky: #b9d7f4;
+        --sky-soft: #d9eafa;
+        --field: #5f8f36;
+        --leaf: #78a945;
+        --moss: #2f5e32;
+        --ink: #080b0a;
+        --muted: #66736a;
+        --paper: rgba(255, 255, 255, 0.76);
+        --paper-strong: rgba(255, 255, 255, 0.92);
+        --line: rgba(38, 64, 41, 0.12);
+        --shadow: 0 24px 70px rgba(38, 67, 44, 0.18);
+        --radius: 18px;
+    }
+
     * {
-        margin: 0;
-        padding: 0;
         box-sizing: border-box;
     }
-    
-    body {
-        background: linear-gradient(-45deg, #0a2818, #0f3d1f, #1a5c2a, #0d4a27);
-        background-size: 400% 400%;
-        animation: gradient 15s ease infinite;
-        min-height: 100vh;
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body,
+    [data-testid="stAppViewContainer"] {
         font-family: 'Inter', sans-serif;
+        color: var(--ink);
+        background:
+            linear-gradient(180deg, rgba(185, 215, 244, 0.74) 0%, rgba(244, 248, 240, 0.95) 48%, #f7faf3 100%),
+            radial-gradient(circle at 14% 12%, rgba(255, 255, 255, 0.86), transparent 30%),
+            linear-gradient(135deg, #d7ebff 0%, #f4f8e8 54%, #eaf5df 100%);
+        min-height: 100vh;
     }
-    
-    @keyframes gradient {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+
+    [data-testid="stHeader"] {
+        background: transparent;
     }
-    
-    /* TITLE AND HEADER ANIMATIONS */
+
+    .block-container {
+        max-width: 1280px;
+        padding: 24px 32px 56px;
+    }
+
+    [data-testid="stSidebar"] {
+        background: rgba(255, 255, 255, 0.74);
+        border-right: 1px solid var(--line);
+        box-shadow: 18px 0 48px rgba(44, 72, 47, 0.08);
+        backdrop-filter: blur(18px);
+    }
+
+    [data-testid="stSidebar"] * {
+        color: var(--ink);
+    }
+
     .title {
-        font-size: 64px;
-        font-weight: 900;
-        background: linear-gradient(135deg, #22c55e 0%, #4ade80 50%, #86efac 100%);
-        background-size: 200% 200%;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 12px;
-        text-align: center;
-        letter-spacing: -1px;
-        animation: slideDown 0.8s cubic-bezier(0.23, 1, 0.320, 1), 
-                   shimmer 3s ease-in-out infinite;
-    }
-    
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    @keyframes shimmer {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-    }
-    
-    .subtitle {
-        color: #e5e7eb;
-        margin-bottom: 28px;
-        text-align: center;
-        font-size: 18px;
-        font-weight: 400;
-        letter-spacing: 0.5px;
-        animation: fadeInUp 0.8s 0.2s cubic-bezier(0.23, 1, 0.320, 1) both;
-    }
-    
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* METRIC CARDS - Enhanced with Animation */
-    .metric-card {
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(74, 222, 128, 0.08) 100%);
-        padding: 28px;
-        border-radius: 20px;
-        border: 1.5px solid rgba(74, 222, 128, 0.35);
-        margin-bottom: 14px;
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25), 
-                    inset 0 1px 2px rgba(255, 255, 255, 0.05);
-        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
-        position: relative;
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-        animation: popIn 0.6s cubic-bezier(0.23, 1, 0.320, 1);
-    }
-    
-    @keyframes popIn {
-        0% {
-            opacity: 0;
-            transform: scale(0.9) translateY(20px);
-        }
-        100% {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-    }
-    
-    .metric-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    }
-    
-    .metric-card::after {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 100px;
-        height: 100px;
-        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-        transition: all 0.5s ease;
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-12px);
-        box-shadow: 0 24px 48px rgba(34, 197, 94, 0.35),
-                    inset 0 1px 2px rgba(255, 255, 255, 0.1);
-        border-color: rgba(74, 222, 128, 0.7);
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.18) 0%, rgba(74, 222, 128, 0.12) 100%);
-    }
-    
-    .metric-card:hover::after {
-        right: -20%;
-        top: -20%;
-    }
-    
-    /* CARDS - Enhanced */
-    .card {
-        background: linear-gradient(135deg, rgba(31, 41, 55, 0.5) 0%, rgba(55, 65, 81, 0.3) 100%);
-        padding: 24px;
-        border-radius: 18px;
-        border: 1.5px solid rgba(74, 222, 128, 0.25);
-        margin-bottom: 16px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2),
-                    inset 0 1px 2px rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(12px);
-        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
-        position: relative;
-        animation: slideInLeft 0.6s cubic-bezier(0.23, 1, 0.320, 1);
-    }
-    
-    @keyframes slideInLeft {
-        from {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
-    .card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-    }
-    
-    .card:hover {
-        border-color: rgba(74, 222, 128, 0.5);
-        background: linear-gradient(135deg, rgba(31, 41, 55, 0.65) 0%, rgba(55, 65, 81, 0.45) 100%);
-        transform: translateY(-6px);
-        box-shadow: 0 16px 40px rgba(74, 222, 128, 0.2),
-                    inset 0 1px 2px rgba(255, 255, 255, 0.08);
-    }
-    
-    /* HIGHLIGHT CARDS */
-    .card-highlight {
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(74, 222, 128, 0.08) 100%);
-        padding: 28px;
-        border-radius: 20px;
-        border: 2px solid rgba(74, 222, 128, 0.45);
-        margin-bottom: 16px;
-        box-shadow: 0 12px 40px rgba(34, 197, 94, 0.2),
-                    inset 0 1px 3px rgba(255, 255, 255, 0.1);
-        position: relative;
-        backdrop-filter: blur(12px);
-        animation: fadeInScale 0.6s 0.2s cubic-bezier(0.23, 1, 0.320, 1) both;
-    }
-    
-    @keyframes fadeInScale {
-        from {
-            opacity: 0;
-            transform: scale(0.95);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-    
-    .card-highlight::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.6), transparent);
-        animation: shimmerLine 2s ease-in-out infinite;
-    }
-    
-    @keyframes shimmerLine {
-        0%, 100% { opacity: 0.3; }
-        50% { opacity: 1; }
-    }
-    
-    /* BADGES - Enhanced */
-    .badge {
-        display: inline-block;
-        padding: 14px 32px;
-        border-radius: 50px;
+        margin: 8px 0 12px;
+        color: var(--ink);
+        font-size: clamp(46px, 6vw, 82px);
+        line-height: 1;
         font-weight: 800;
-        font-size: 17px;
-        background: linear-gradient(135deg, #22c55e, #4ade80);
-        color: #0a2818;
-        box-shadow: 0 8px 24px rgba(34, 197, 94, 0.35),
-                    inset 0 1px 2px rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        letter-spacing: 0.5px;
-        animation: bounceIn 0.6s 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) both;
+        letter-spacing: 0;
+        text-align: center;
+        animation: fadeUp 700ms ease both;
     }
-    
-    @keyframes bounceIn {
-        0% {
-            opacity: 0;
-            transform: scale(0.3);
-        }
-        50% {
-            opacity: 1;
-            transform: scale(1.05);
-        }
-        100% {
-            transform: scale(1);
-        }
+
+    .subtitle {
+        max-width: 720px;
+        margin: 0 auto 30px;
+        color: var(--muted);
+        font-size: 19px;
+        line-height: 1.6;
+        font-weight: 500;
+        text-align: center;
+        animation: fadeUp 800ms 80ms ease both;
     }
-    
-    .badge-champion {
-        background: linear-gradient(135deg, #f59e0b, #fbbf24);
-        color: #78350f;
-        box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35);
-    }
-    
-    .badge-guardian {
-        background: linear-gradient(135deg, #22c55e, #4ade80);
-        color: #0a2818;
-        box-shadow: 0 8px 24px rgba(34, 197, 94, 0.35);
-    }
-    
-    .badge-learner {
-        background: linear-gradient(135deg, #3b82f6, #60a5fa);
-        color: #082f49;
-        box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
-    }
-    
-    .badge-high {
-        background: linear-gradient(135deg, #ef4444, #f87171);
-        color: #7c2d12;
-        box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
-    }
-    
-    /* INPUT SECTION */
-    .input-section {
-        background: linear-gradient(135deg, rgba(31, 41, 55, 0.4) 0%, rgba(55, 65, 81, 0.2) 100%);
-        padding: 36px;
-        border-radius: 22px;
-        border: 1.5px solid rgba(74, 222, 128, 0.25);
-        margin-bottom: 24px;
-        backdrop-filter: blur(12px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15),
-                    inset 0 1px 2px rgba(255, 255, 255, 0.03);
-        position: relative;
-        animation: slideInUp 0.8s 0.1s cubic-bezier(0.23, 1, 0.320, 1) both;
-    }
-    
-    @keyframes slideInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .input-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-        border-radius: 22px 22px 0 0;
-    }
-    
-    /* SECTION HEADERS */
+
     .section-header {
-        font-size: 32px;
-        font-weight: 900;
-        background: linear-gradient(135deg, #22c55e 0%, #4ade80 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-top: 36px;
-        margin-bottom: 24px;
-        letter-spacing: -0.5px;
-        position: relative;
-        animation: fadeInLeft 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+        margin: 38px 0 18px;
+        color: var(--ink);
+        font-size: clamp(28px, 3vw, 42px);
+        line-height: 1.08;
+        font-weight: 800;
+        letter-spacing: 0;
+        animation: fadeUp 650ms ease both;
     }
-    
-    @keyframes fadeInLeft {
-        from {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    
+
     .section-header::after {
         content: '';
         display: block;
-        width: 60px;
-        height: 3px;
-        background: linear-gradient(90deg, #22c55e, #4ade80);
-        margin-top: 12px;
-        border-radius: 2px;
-        animation: expandWidth 0.6s 0.2s cubic-bezier(0.23, 1, 0.320, 1) both;
+        width: 88px;
+        height: 4px;
+        margin-top: 14px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #030504, var(--leaf), rgba(120, 169, 69, 0));
     }
-    
-    @keyframes expandWidth {
-        from {
-            width: 0;
-        }
-        to {
-            width: 60px;
-        }
+
+    .input-section,
+    .card,
+    .card-highlight,
+    .metric-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: linear-gradient(145deg, var(--paper-strong), rgba(255, 255, 255, 0.64));
+        box-shadow: 0 18px 50px rgba(57, 86, 47, 0.12);
+        backdrop-filter: blur(18px);
+        position: relative;
+        overflow: hidden;
+        animation: fadeUp 700ms ease both;
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
     }
-    
-    /* PROGRESS BAR */
+
+    .input-section {
+        padding: 34px;
+        margin-bottom: 24px;
+    }
+
+    .card,
+    .card-highlight,
+    .metric-card {
+        padding: 26px;
+        margin-bottom: 16px;
+    }
+
+    .metric-card::before,
+    .card-highlight::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 5px;
+        background: linear-gradient(90deg, #030504, var(--leaf), #b6d274);
+    }
+
+    .metric-card:hover,
+    .card:hover,
+    .card-highlight:hover {
+        transform: translateY(-6px);
+        border-color: rgba(95, 143, 54, 0.28);
+        box-shadow: 0 26px 64px rgba(57, 86, 47, 0.17);
+    }
+
+    .card-highlight {
+        background:
+            linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(232, 244, 216, 0.82)),
+            linear-gradient(135deg, rgba(120, 169, 69, 0.12), transparent);
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 20px;
+        border-radius: 999px;
+        border: 1px solid rgba(8, 11, 10, 0.08);
+        background: #030504;
+        color: #fff;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0;
+    }
+
+    .badge-champion {
+        background: linear-gradient(135deg, #f4c760, #d8831e);
+        color: #2c1804;
+    }
+
+    .badge-guardian {
+        background: linear-gradient(135deg, #acd66f, #5f8f36);
+        color: #0d1c0f;
+    }
+
+    .badge-learner {
+        background: linear-gradient(135deg, #b9d7f4, #6aa0cf);
+        color: #071927;
+    }
+
+    .badge-high {
+        background: linear-gradient(135deg, #ff8e70, #d84b35);
+        color: #2e0904;
+    }
+
     .progress-bar {
         width: 100%;
-        height: 14px;
-        background: rgba(74, 222, 128, 0.08);
-        border-radius: 12px;
+        height: 12px;
+        margin-top: 12px;
+        border-radius: 999px;
+        background: rgba(8, 11, 10, 0.08);
         overflow: hidden;
-        margin-top: 10px;
-        border: 1px solid rgba(74, 222, 128, 0.2);
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    
+
     .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #22c55e, #4ade80, #86efac);
-        border-radius: 12px;
-        transition: width 0.8s cubic-bezier(0.23, 1, 0.320, 1);
-        box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
-        animation: fillPulse 2s ease-in-out infinite;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #030504, var(--moss), var(--leaf));
+        box-shadow: 0 0 20px rgba(95, 143, 54, 0.34);
+        transition: width 600ms ease;
     }
-    
-    @keyframes fillPulse {
-        0%, 100% { box-shadow: 0 0 12px rgba(34, 197, 94, 0.5); }
-        50% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.8); }
-    }
-    
-    /* SEPARATORS */
+
     hr {
-        border: none;
         height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(74, 222, 128, 0.2), transparent);
         margin: 32px 0;
+        border: none;
+        background: linear-gradient(90deg, transparent, rgba(8, 11, 10, 0.16), transparent);
     }
-    
-    /* INPUT STYLING */
+
     .stTextInput > div > div > input,
-    .stNumberInput > div > div > input,
-    .stSelectbox > div > div > select {
-        background-color: rgba(31, 41, 55, 0.6) !important;
-        border: 1.5px solid rgba(74, 222, 128, 0.3) !important;
+    .stNumberInput input,
+    .stSelectbox [data-baseweb="select"],
+    .stTextArea textarea {
+        min-height: 48px;
+        border: 1px solid rgba(8, 11, 10, 0.12) !important;
         border-radius: 12px !important;
-        color: #e5e7eb !important;
-        padding: 12px 16px !important;
-        font-weight: 500;
-        transition: all 0.3s ease !important;
+        background: rgba(255, 255, 255, 0.88) !important;
+        color: var(--ink) !important;
+        box-shadow: 0 12px 30px rgba(57, 86, 47, 0.08);
     }
-    
+
     .stTextInput > div > div > input:focus,
-    .stNumberInput > div > div > input:focus,
-    .stSelectbox > div > div > select:focus {
-        border-color: rgba(74, 222, 128, 0.8) !important;
-        box-shadow: 0 0 12px rgba(34, 197, 94, 0.3) !important;
-        background-color: rgba(31, 41, 55, 0.8) !important;
+    .stNumberInput input:focus,
+    .stTextArea textarea:focus {
+        border-color: rgba(95, 143, 54, 0.55) !important;
+        box-shadow: 0 0 0 4px rgba(120, 169, 69, 0.14) !important;
     }
-    
-    .stInfo, .stWarning, .stSuccess {
+
+    .stButton > button {
+        min-height: 52px;
+        padding: 0 28px !important;
+        border: none !important;
+        border-radius: 12px !important;
+        background: #030504 !important;
+        color: #fff !important;
+        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.2) !important;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0 !important;
+        transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease !important;
+    }
+
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        background: #101713 !important;
+        box-shadow: 0 22px 44px rgba(0, 0, 0, 0.26) !important;
+    }
+
+    .stInfo,
+    .stWarning,
+    .stSuccess,
+    .stError {
         border-radius: 14px !important;
-        border-left: 4px solid !important;
-        padding: 16px !important;
-        animation: slideInRight 0.5s cubic-bezier(0.23, 1, 0.320, 1);
+        border: 1px solid var(--line) !important;
+        box-shadow: 0 12px 30px rgba(57, 86, 47, 0.08);
     }
-    
-    @keyframes slideInRight {
+
+    .stInfo {
+        background: rgba(185, 215, 244, 0.42) !important;
+    }
+
+    .stWarning {
+        background: rgba(244, 199, 96, 0.24) !important;
+    }
+
+    .stSuccess {
+        background: rgba(172, 214, 111, 0.26) !important;
+    }
+
+    /* DARK PREMIUM THEME OVERRIDES */
+    :root {
+        --sky: #8ec5ff;
+        --sky-soft: #18273a;
+        --field: #4ade80;
+        --leaf: #58d27b;
+        --moss: #86efac;
+        --ink: #f8fafc;
+        --muted: #a7b3c6;
+        --paper: rgba(15, 23, 42, 0.76);
+        --paper-strong: rgba(12, 18, 32, 0.92);
+        --line: rgba(148, 163, 184, 0.18);
+        --shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+        --radius: 18px;
+    }
+
+    body,
+    [data-testid="stAppViewContainer"] {
+        color: var(--ink);
+        background:
+            radial-gradient(circle at 18% 8%, rgba(74, 222, 128, 0.22), transparent 28%),
+            radial-gradient(circle at 84% 12%, rgba(96, 165, 250, 0.18), transparent 30%),
+            linear-gradient(145deg, #030712 0%, #07130d 42%, #111827 100%) !important;
+    }
+
+    .block-container {
+        padding-top: 28px;
+    }
+
+    [data-testid="stSidebar"] {
+        background: rgba(3, 7, 18, 0.84);
+        border-right: 1px solid var(--line);
+        box-shadow: 18px 0 48px rgba(0, 0, 0, 0.26);
+    }
+
+    [data-testid="stSidebar"] * {
+        color: var(--ink);
+    }
+
+    .title {
+        color: var(--ink);
+        text-shadow: 0 18px 48px rgba(74, 222, 128, 0.18);
+    }
+
+    .subtitle,
+    .section-header {
+        color: var(--ink);
+    }
+
+    .subtitle {
+        color: var(--muted);
+    }
+
+    .input-section,
+    .card,
+    .card-highlight,
+    .metric-card {
+        background:
+            linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(17, 24, 39, 0.72)),
+            linear-gradient(135deg, rgba(74, 222, 128, 0.08), transparent);
+        border-color: var(--line);
+        box-shadow: var(--shadow);
+    }
+
+    .card-highlight {
+        background:
+            linear-gradient(145deg, rgba(13, 36, 25, 0.92), rgba(12, 18, 32, 0.84)),
+            linear-gradient(135deg, rgba(74, 222, 128, 0.14), transparent);
+    }
+
+    .metric-card::before,
+    .card-highlight::before,
+    .section-header::after {
+        background: linear-gradient(90deg, #4ade80, #86efac, rgba(96, 165, 250, 0));
+    }
+
+    .progress-bar {
+        background: rgba(148, 163, 184, 0.14);
+    }
+
+    .progress-fill {
+        background: linear-gradient(90deg, #16a34a, #4ade80, #86efac);
+    }
+
+    .stTextInput > div > div > input,
+    .stNumberInput input,
+    .stSelectbox [data-baseweb="select"],
+    .stTextArea textarea {
+        background: #ffffff !important;
+        border-color: rgba(148, 163, 184, 0.2) !important;
+        color: #05070a !important;
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+    }
+
+    .stTextInput label,
+    .stNumberInput label,
+    .stSelectbox label,
+    [data-testid="stWidgetLabel"],
+    [data-testid="stWidgetLabel"] p {
+        color: #ffffff !important;
+        opacity: 1 !important;
+        font-weight: 800 !important;
+    }
+
+    .stSelectbox [data-baseweb="select"] *,
+    .stNumberInput input,
+    .stTextInput input,
+    .stTextArea textarea {
+        color: #05070a !important;
+        -webkit-text-fill-color: #05070a !important;
+    }
+
+    .stButton > button {
+        background: linear-gradient(135deg, #0b0f18, #111827) !important;
+        border: 1px solid rgba(134, 239, 172, 0.28) !important;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32) !important;
+    }
+
+    .stButton > button:hover {
+        background: linear-gradient(135deg, #111827, #0f2a1a) !important;
+        border-color: rgba(134, 239, 172, 0.55) !important;
+    }
+
+    .stInfo,
+    .stWarning,
+    .stSuccess,
+    .stError {
+        color: var(--ink) !important;
+        background: rgba(15, 23, 42, 0.78) !important;
+        border-color: var(--line) !important;
+    }
+
+    [style*="#d1d5db"],
+    [style*="#9ca3af"],
+    [style*="rgb(209, 213, 219)"],
+    [style*="rgb(156, 163, 175)"] {
+        color: var(--muted) !important;
+    }
+
+    [style*="#4ade80"],
+    [style*="rgb(74, 222, 128)"] {
+        color: var(--moss) !important;
+    }
+
+    [data-testid="stDataFrame"] {
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        background: #0f172a !important;
+    }
+
+    [data-testid="stDataFrame"] > div,
+    [data-testid="stDataFrame"] iframe,
+    [data-testid="stDataFrame"] [class*="stDataFrame"],
+    [data-testid="stDataFrame"] [class*="dataframe"],
+    [data-testid="stDataFrame"] [class*="glide"],
+    [data-testid="stDataFrame"] [class*="table"] {
+        background: #0f172a !important;
+        color: #ffffff !important;
+    }
+
+    [data-testid="stDataFrame"] canvas {
+        background: #0f172a !important;
+    }
+
+    [data-testid="stDataFrame"] button,
+    [data-testid="stDataFrame"] [role="button"] {
+        background: #111827 !important;
+        color: #ffffff !important;
+        border-color: rgba(134, 239, 172, 0.22) !important;
+    }
+
+    [data-testid="stDataFrame"] svg {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+    }
+
+    [data-testid="stDataFrame"] [role="grid"],
+    [data-testid="stDataFrame"] [role="row"],
+    [data-testid="stDataFrame"] [role="columnheader"],
+    [data-testid="stDataFrame"] [role="gridcell"] {
+        background-color: #0f172a !important;
+        color: #ffffff !important;
+        border-color: rgba(148, 163, 184, 0.16) !important;
+    }
+
+    [data-testid="stDataFrame"] [role="columnheader"] {
+        background-color: #07130d !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+    }
+
+    .history-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid rgba(134, 239, 172, 0.24);
+        border-radius: 16px;
+        background: #0f172a;
+        box-shadow: var(--shadow);
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #0f172a;
+        color: #ffffff;
+        font-size: 15px;
+    }
+
+    .history-table thead th {
+        padding: 16px 18px;
+        background: #07130d;
+        color: #ffffff !important;
+        border-bottom: 1px solid rgba(134, 239, 172, 0.3);
+        font-weight: 800;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .history-table tbody td {
+        padding: 15px 18px;
+        color: #ffffff !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+        text-align: left;
+    }
+
+    .history-table tbody tr:nth-child(odd) {
+        background: #0f172a;
+    }
+
+    .history-table tbody tr:nth-child(even) {
+        background: #111827;
+    }
+
+    .history-table tbody tr:hover {
+        background: rgba(34, 197, 94, 0.14);
+    }
+
+    @keyframes fadeUp {
         from {
             opacity: 0;
-            transform: translateX(20px);
+            transform: translateY(18px);
         }
         to {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
         }
     }
-    
-    .stInfo {
-        background-color: rgba(59, 130, 246, 0.1) !important;
-        border-left-color: #3b82f6 !important;
-    }
-    
-    .stWarning {
-        background-color: rgba(245, 158, 11, 0.1) !important;
-        border-left-color: #f59e0b !important;
-    }
-    
-    .stSuccess {
-        background-color: rgba(34, 197, 94, 0.1) !important;
-        border-left-color: #22c55e !important;
-    }
-    
-    /* BUTTON STYLING */
-    .stButton > button {
-        background: linear-gradient(135deg, #22c55e, #4ade80) !important;
-        color: #0a2818 !important;
-        font-weight: 800 !important;
-        font-size: 16px !important;
-        padding: 14px 32px !important;
-        border: none !important;
-        border-radius: 12px !important;
-        box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3) !important;
-        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1) !important;
-        letter-spacing: 0.5px !important;
-        animation: slideInUp 0.6s 0.4s cubic-bezier(0.23, 1, 0.320, 1) both;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .stButton > button::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: width 0.6s, height 0.6s;
-    }
-    
-    .stButton > button:hover::before {
-        width: 300px;
-        height: 300px;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-4px) !important;
-        box-shadow: 0 16px 40px rgba(34, 197, 94, 0.5) !important;
-    }
-    
-    .stButton > button:active {
-        transform: translateY(-2px) !important;
-    }
-    
-    /* FLOATING ANIMATION */
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-    
-    .floating {
-        animation: float 3s ease-in-out infinite;
-    }
-    
-    /* GLOW ANIMATION */
-    @keyframes glow {
-        0%, 100% {
-            box-shadow: 0 0 5px rgba(34, 197, 94, 0.3), inset 0 0 5px rgba(34, 197, 94, 0.1);
+
+    @media (max-width: 760px) {
+        .block-container {
+            padding: 16px 14px 42px;
         }
-        50% {
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.6), inset 0 0 10px rgba(34, 197, 94, 0.2);
+
+        .input-section,
+        .card,
+        .card-highlight,
+        .metric-card {
+            padding: 22px;
         }
     }
-    
-    /* STAGGER ANIMATION DELAYS */
-    .stagger-1 { animation-delay: 0.1s !important; }
-    .stagger-2 { animation-delay: 0.2s !important; }
-    .stagger-3 { animation-delay: 0.3s !important; }
-    .stagger-4 { animation-delay: 0.4s !important; }
-    .stagger-5 { animation-delay: 0.5s !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -566,545 +589,693 @@ st.markdown("---")
 # -------------------------
 # INPUTS SECTION
 # -------------------------
-st.markdown("<div class='section-header'>📝 Your Lifestyle Profile</div>", unsafe_allow_html=True)
-
-st.markdown("<div class='input-section'>", unsafe_allow_html=True)
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.markdown("""
-    <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
-        <span style='font-size: 24px;'>🚗</span>
-        <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Transportation</span>
-    </div>
-    """, unsafe_allow_html=True)
-    transport = st.selectbox("Primary Transport", ["Car", "Public Transport", "Bike", "Walking"])
-    distance = st.number_input("Daily Distance (km)", min_value=0.0, value=10.0, step=1.0)
-
-with col2:
-    st.markdown("""
-    <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
-        <span style='font-size: 24px;'>⚡</span>
-        <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Energy & Diet</span>
-    </div>
-    """, unsafe_allow_html=True)
-    electricity = st.number_input("Monthly Electricity (kWh)", min_value=0.0, value=200.0, step=10.0)
-    diet = st.selectbox("Diet Type", ["Vegetarian", "Non-Vegetarian"])
-
-with col3:
-    st.markdown("""
-    <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
-        <span style='font-size: 24px;'>✈️</span>
-        <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Travel</span>
-    </div>
-    """, unsafe_allow_html=True)
-    flights = st.number_input("Annual Flights", min_value=0, value=0, step=1)
-    st.info("💡 How many long-distance flights per year?")
-
-st.markdown("</div>", unsafe_allow_html=True)
-
 
 # -------------------------
-# PDF REPORT GENERATION
+# TABS CONFIGURATION
 # -------------------------
-def generate_pdf(total, eco_score, insight):
-    file_name = "eco_report.pdf"
-    doc = SimpleDocTemplate(file_name)
-    styles = getSampleStyleSheet()
+tab1, tab2 = st.tabs(["🌍 Carbon Footprint", "⚡ Home Energy Audit"])
 
-    content = [
-        Paragraph("EcoBuddy AI Report", styles["Title"]),
-        Paragraph(f"Carbon Footprint: {total:.2f} kg CO₂", styles["Normal"]),
-        Paragraph(f"Eco Score: {eco_score}/100", styles["Normal"]),
-        Paragraph("Key Insight:", styles["Heading2"]),
-        Paragraph(insight, styles["Normal"])
-    ]
+with tab1:
+    st.markdown("<div class='section-header'>📝 Your Lifestyle Profile</div>", unsafe_allow_html=True)
 
-    doc.build(content)
-    return file_name
+    col1, col2, col3 = st.columns(3)
 
-
-# -------------------------
-# CALCULATE & ANALYZE
-# -------------------------
-col_btn1, col_btn2, col_btn3 = st.columns([1, 1.5, 1])
-with col_btn2:
-    analyze_btn = st.button("🌿 Analyze My Impact", use_container_width=True)
-
-if analyze_btn:
-
-    with st.spinner("🌍 Analyzing your carbon footprint..."):
-        total, contributors = calculate_footprint(
-            transport, distance, electricity, diet, flights
-        )
-
-    eco_score = calculate_eco_score(total)
-
-    insight, recommendations = generate_recommendations(
-        transport, electricity, diet, flights, contributors
-    )
-
-    save_assessment(
-        transport, distance, electricity, diet, flights, total, eco_score
-    )
-
-    st.success("✅ Analysis completed!")
-
-    st.markdown("---")
-
-    # -------------------------
-    # RESULTS DASHBOARD
-    # -------------------------
-    st.markdown("<div class='section-header'>📊 Your Carbon Footprint Analysis</div>", unsafe_allow_html=True)
-
-    # Top metrics row
-    met1, met2, met3, met4 = st.columns(4)
-    
-    with met1:
+    with col1:
         st.markdown("""
-        <div class='metric-card'>
-            <div style='font-size: 14px; color: #d1d5db; margin-bottom: 8px;'>🌍 Total Footprint</div>
-            <div style='font-size: 36px; font-weight: 900; color: #4ade80;'>{:.0f}</div>
-            <div style='font-size: 12px; color: #9ca3af;'>kg CO₂/year</div>
-        </div>
-        """.format(total), unsafe_allow_html=True)
-    
-    with met2:
-        st.markdown("""
-        <div class='metric-card'>
-            <div style='font-size: 14px; color: #d1d5db; margin-bottom: 8px;'>🏆 Eco Score</div>
-            <div style='font-size: 36px; font-weight: 900; color: #4ade80;'>{}</div>
-            <div style='font-size: 12px; color: #9ca3af;'>out of 100</div>
-        </div>
-        """.format(eco_score), unsafe_allow_html=True)
-    
-    with met3:
-        st.markdown("""
-        <div class='metric-card'>
-            <div style='font-size: 14px; color: #d1d5db; margin-bottom: 8px;'>📈 Biggest Impact</div>
-            <div style='font-size: 24px; font-weight: 700; color: #4ade80;'>{}</div>
-            <div style='font-size: 12px; color: #9ca3af;'>{:.0f} kg CO₂</div>
-        </div>
-        """.format(max(contributors, key=contributors.get), max(contributors.values())), unsafe_allow_html=True)
-    
-    with met4:
-        st.markdown("""
-        <div class='metric-card'>
-            <div style='font-size: 14px; color: #d1d5db; margin-bottom: 8px;'>🎯 Status</div>
-            <div style='font-size: 18px; font-weight: 700; color: #4ade80;'>Active</div>
-            <div style='font-size: 12px; color: #9ca3af;'>Tracking enabled</div>
+        <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
+            <span style='font-size: 24px;'>🚗</span>
+            <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Transportation</span>
         </div>
         """, unsafe_allow_html=True)
+        transport = st.selectbox("Primary Transport", ["Car", "Public Transport", "Bike", "Walking"])
+        distance = st.number_input("Daily Distance (km)", min_value=0.0, value=10.0, step=1.0)
 
-    st.markdown("---")
-
-    # -------------------------
-    # ECO SCORE PROGRESS & BADGE
-    # -------------------------
-    col_badge1, col_badge2 = st.columns([1, 1])
-    
-    with col_badge1:
-        st.markdown("<div class='section-header' style='margin-top: 0;'>🏅 Eco Achievement</div>", unsafe_allow_html=True)
-        
-        if eco_score >= 85:
-            badge_text = "🌟 Eco Champion"
-            badge_class = "badge badge-champion"
-        elif eco_score >= 70:
-            badge_text = "🌿 Green Guardian"
-            badge_class = "badge badge-guardian"
-        elif eco_score >= 50:
-            badge_text = "🍃 Eco Learner"
-            badge_class = "badge badge-learner"
-        else:
-            badge_text = "🔥 High Impact User"
-            badge_class = "badge badge-high"
-        
-        st.markdown(f"<div class='{badge_class}'>{badge_text}</div>", unsafe_allow_html=True)
-        
-        # Progress bar
-        st.markdown(f"""
-        <div style='margin-top: 16px;'>
-            <div style='display: flex; justify-content: space-between; margin-bottom: 6px;'>
-                <span style='color: #d1d5db; font-size: 14px;'>Score Progress</span>
-                <span style='color: #4ade80; font-weight: 700;'>{eco_score}%</span>
-            </div>
-            <div class='progress-bar'>
-                <div class='progress-fill' style='width: {eco_score}%;'></div>
-            </div>
+    with col2:
+        st.markdown("""
+        <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
+            <span style='font-size: 24px;'>⚡</span>
+            <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Energy & Diet</span>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Description
-        if eco_score >= 85:
-            st.info("🌟 Excellent! You're making exceptional environmental choices. Keep it up!")
-        elif eco_score >= 70:
-            st.info("🌿 Great work! Your footprint is below average. Focus on small improvements.")
-        elif eco_score >= 50:
-            st.info("🍃 Good start! There's room to improve. Check recommendations below.")
-        else:
-            st.warning("🔥 Your carbon footprint is above average. Let's work on reducing it!")
-    
-    with col_badge2:
-        st.markdown("<div class='section-header' style='margin-top: 0;'>📊 Emission Sources</div>", unsafe_allow_html=True)
-        
-        # Pie chart with Plotly
-        fig = go.Figure(data=[go.Pie(
-            labels=list(contributors.keys()),
-            values=list(contributors.values()),
-            hole=0.4,
-            marker=dict(
-                colors=['#4ade80', '#60a5fa', '#fbbf24', '#f87171'],
-                line=dict(color='rgba(0,0,0,0.1)', width=2)
-            ),
-            textposition='auto',
-            hovertemplate='<b>%{label}</b><br>%{value:.0f} kg CO₂<br>%{percent}<extra></extra>'
-        )])
-        
-        fig.update_layout(
-            showlegend=True,
-            height=280,
-            margin=dict(l=0, r=0, t=0, b=0),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#d1d5db', size=12),
-            legend=dict(
-                x=-0.15,
-                y=1,
-                bgcolor='rgba(0,0,0,0.3)',
-                bordercolor='rgba(74, 222, 128, 0.3)',
-                borderwidth=1
+        electricity = st.number_input("Monthly Electricity (kWh)", min_value=0.0, value=200.0, step=10.0)
+        diet = st.selectbox("Diet Type", ["Vegetarian", "Non-Vegetarian"])
+
+    with col3:
+        st.markdown("""
+        <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 16px;'>
+            <span style='font-size: 24px;'>✈️</span>
+            <span style='font-size: 18px; font-weight: 700; color: #e5e7eb;'>Travel</span>
+        </div>
+        """, unsafe_allow_html=True)
+        flights = st.number_input("Annual Flights", min_value=0, value=0, step=1)
+        st.info("💡 How many long-distance flights per year?")
+
+
+    # -------------------------
+    # PDF REPORT GENERATION
+    # -------------------------
+    def generate_pdf(total, eco_score, insight):
+        try:
+            file_name = "eco_report.pdf"
+            doc = SimpleDocTemplate(file_name)
+            styles = getSampleStyleSheet()
+
+            content = [
+                Paragraph("EcoBuddy AI Report", styles["Title"]),
+                Paragraph(f"Carbon Footprint: {total:.2f} kg CO₂", styles["Normal"]),
+                Paragraph(f"Eco Score: {eco_score}/100", styles["Normal"]),
+                Paragraph("Key Insight:", styles["Heading2"]),
+                Paragraph(insight, styles["Normal"])
+            ]
+
+            doc.build(content)
+            return file_name
+        except Exception:
+            st.error("Could not generate the PDF report. Please check disk space and permissions, then try again.")
+            return None
+
+
+    # -------------------------
+    # CALCULATE & ANALYZE
+    # -------------------------
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 1.5, 1])
+    with col_btn2:
+        analyze_btn = st.button("🌿 Analyze My Impact", width="stretch")
+
+    if analyze_btn:
+
+        with st.spinner("🌍 Analyzing your carbon footprint..."):
+            total, contributors = calculate_footprint(
+                transport, distance, electricity, diet, flights
             )
+
+        eco_score = calculate_eco_score(total)
+
+        insight, recommendations = generate_recommendations(
+            transport, electricity, diet, flights, contributors
         )
-        
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-    st.markdown("---")
-
-    # -------------------------
-    # DETAILED BREAKDOWN
-    # -------------------------
-    st.markdown("<div class='section-header'>📋 Detailed Breakdown</div>", unsafe_allow_html=True)
-    
-    # Bar chart
-    breakdown_fig = go.Figure(data=[
-        go.Bar(
-            x=list(contributors.keys()),
-            y=list(contributors.values()),
-            marker=dict(
-                color=['#4ade80', '#60a5fa', '#fbbf24', '#f87171'],
-                line=dict(color='rgba(255,255,255,0.2)', width=2)
-            ),
-            text=[f'{v:.0f} kg' for v in contributors.values()],
-            textposition='auto',
-            hovertemplate='<b>%{x}</b><br>%{y:.0f} kg CO₂<extra></extra>'
+        save_assessment(
+            transport, distance, electricity, diet, flights, total, eco_score
         )
-    ])
-    
-    breakdown_fig.update_layout(
-        height=350,
-        margin=dict(l=40, r=20, t=20, b=40),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(55, 65, 81, 0.2)',
-        font=dict(color='#d1d5db', size=12),
-        xaxis=dict(
-            showgrid=False,
-            zeroline=False,
-            color='#9ca3af'
-        ),
-        yaxis=dict(
-            showgrid=True,
-            gridwidth=1,
-            gridcolor='rgba(74, 222, 128, 0.1)',
-            zeroline=False,
-            color='#9ca3af'
-        ),
-        showlegend=False
-    )
-    
-    st.plotly_chart(breakdown_fig, use_container_width=True, config={'displayModeBar': False})
 
-    st.markdown("---")
+        st.success("✅ Analysis completed!")
 
-    # -------------------------
-    # AI INSIGHT
-    # -------------------------
-    st.markdown("<div class='section-header'>🤖 AI Insights & Analysis</div>", unsafe_allow_html=True)
-    
-    col_insight1, col_insight2 = st.columns([1.2, 0.8])
-    
-    with col_insight1:
-        st.markdown(f"""
-        <div class='card-highlight'>
-            <div style='display: flex; gap: 12px; align-items: flex-start;'>
-                <div style='font-size: 32px;'>💡</div>
-                <div style='flex: 1;'>
-                    <div style='font-size: 16px; font-weight: 800; color: #4ade80; margin-bottom: 12px;'>Key Finding</div>
-                    <div style='font-size: 15px; color: #d1d5db; line-height: 1.8;'>{insight}</div>
-                </div>
+        st.markdown("---")
+
+        # -------------------------
+        # RESULTS DASHBOARD
+        # -------------------------
+        st.markdown("<div class='section-header'>📊 Your Carbon Footprint Analysis</div>", unsafe_allow_html=True)
+
+        # Top metrics row
+        met1, met2, met3, met4 = st.columns(4)
+
+        with met1:
+            st.markdown("""
+            <div class='metric-card'>
+                <div style='font-size: 14px; color: #d1d5db; margin-bottom: 8px;'>🌍 Total Footprint</div>
+                <div style='font-size: 36px; font-weight: 900; color: #4ade80;'>{:.0f}</div>
+                <div style='font-size: 12px; color: #9ca3af;'>kg CO₂/year</div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col_insight2:
-        st.markdown("""
-        <div class='card'>
-            <div style='display: flex; gap: 12px; align-items: flex-start;'>
-                <div style='font-size: 32px;'>🎯</div>
-                <div style='flex: 1;'>
-                    <div style='font-size: 16px; font-weight: 800; color: #4ade80; margin-bottom: 12px;'>Quick Tips</div>
-                    <ul style='color: #d1d5db; font-size: 14px; line-height: 2.2; padding-left: 20px; margin: 0;'>
-                        <li>Start with small daily changes</li>
-                        <li>Track progress regularly</li>
-                        <li>Share with friends & family</li>
-                        <li>Focus on your biggest source</li>
-                    </ul>
-                </div>
+            """.format(total), unsafe_allow_html=True)
+
+        with met2:
+            st.markdown("""
+            <div class='metric-card'>
+                <div style='font-size: 14px; color: #d1d5db; margin-bottom: 8px;'>🏆 Eco Score</div>
+                <div style='font-size: 36px; font-weight: 900; color: #4ade80;'>{}</div>
+                <div style='font-size: 12px; color: #9ca3af;'>out of 100</div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """.format(eco_score), unsafe_allow_html=True)
 
-    st.markdown("---")
+        with met3:
+            st.markdown("""
+            <div class='metric-card'>
+                <div style='font-size: 14px; color: #d1d5db; margin-bottom: 8px;'>📈 Biggest Impact</div>
+                <div style='font-size: 24px; font-weight: 700; color: #4ade80;'>{}</div>
+                <div style='font-size: 12px; color: #9ca3af;'>{:.0f} kg CO₂</div>
+            </div>
+            """.format(max(contributors, key=contributors.get), max(contributors.values())), unsafe_allow_html=True)
 
-    # -------------------------
-    # RECOMMENDATIONS
-    # -------------------------
-    st.markdown("<div class='section-header'>💡 Personalized Recommendations</div>", unsafe_allow_html=True)
-    
-    if len(recommendations) > 0:
-        for idx, r in enumerate(recommendations):
+        with met4:
+            st.markdown("""
+            <div class='metric-card'>
+                <div style='font-size: 14px; color: #d1d5db; margin-bottom: 8px;'>🎯 Status</div>
+                <div style='font-size: 18px; font-weight: 700; color: #4ade80;'>Active</div>
+                <div style='font-size: 12px; color: #9ca3af;'>Tracking enabled</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("---")
+
+        # -------------------------
+        # ECO SCORE PROGRESS & BADGE
+        # -------------------------
+        col_badge1, col_badge2 = st.columns([1, 1])
+
+        with col_badge1:
+            st.markdown("<div class='section-header' style='margin-top: 0;'>🏅 Eco Achievement</div>", unsafe_allow_html=True)
+
+            if eco_score >= 85:
+                badge_text = "🌟 Eco Champion"
+                badge_class = "badge badge-champion"
+            elif eco_score >= 70:
+                badge_text = "🌿 Green Guardian"
+                badge_class = "badge badge-guardian"
+            elif eco_score >= 50:
+                badge_text = "🍃 Eco Learner"
+                badge_class = "badge badge-learner"
+            else:
+                badge_text = "🔥 High Impact User"
+                badge_class = "badge badge-high"
+
+            st.markdown(f"<div class='{badge_class}'>{badge_text}</div>", unsafe_allow_html=True)
+
+            # Progress bar
             st.markdown(f"""
-            <div class='card' style='border-left: 4px solid #22c55e;'>
-                <div style='display: flex; gap: 12px;'>
-                    <div style='font-size: 24px;'>💚</div>
+            <div style='margin-top: 16px;'>
+                <div style='display: flex; justify-content: space-between; margin-bottom: 6px;'>
+                    <span style='color: #d1d5db; font-size: 14px;'>Score Progress</span>
+                    <span style='color: #4ade80; font-weight: 700;'>{eco_score}%</span>
+                </div>
+                <div class='progress-bar'>
+                    <div class='progress-fill' style='width: {eco_score}%;'></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Description
+            if eco_score >= 85:
+                st.info("🌟 Excellent! You're making exceptional environmental choices. Keep it up!")
+            elif eco_score >= 70:
+                st.info("🌿 Great work! Your footprint is below average. Focus on small improvements.")
+            elif eco_score >= 50:
+                st.info("🍃 Good start! There's room to improve. Check recommendations below.")
+            else:
+                st.warning("🔥 Your carbon footprint is above average. Let's work on reducing it!")
+
+        with col_badge2:
+            st.markdown("<div class='section-header' style='margin-top: 0;'>📊 Emission Sources</div>", unsafe_allow_html=True)
+
+            # Pie chart with Plotly
+            fig = go.Figure(data=[go.Pie(
+                labels=list(contributors.keys()),
+                values=list(contributors.values()),
+                hole=0.4,
+                marker=dict(
+                    colors=['#4ade80', '#60a5fa', '#fbbf24', '#f87171'],
+                    line=dict(color='rgba(0,0,0,0.1)', width=2)
+                ),
+                textposition='auto',
+                hovertemplate='<b>%{label}</b><br>%{value:.0f} kg CO₂<br>%{percent}<extra></extra>'
+            )])
+
+            fig.update_layout(
+                showlegend=True,
+                height=280,
+                margin=dict(l=0, r=0, t=0, b=0),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#d1d5db', size=12),
+                legend=dict(
+                    x=-0.15,
+                    y=1,
+                    bgcolor='rgba(0,0,0,0.3)',
+                    bordercolor='rgba(74, 222, 128, 0.3)',
+                    borderwidth=1
+                )
+            )
+
+            st.plotly_chart(fig, width="stretch", config={'displayModeBar': False})
+
+        st.markdown("---")
+
+        # -------------------------
+        # DETAILED BREAKDOWN
+        # -------------------------
+        st.markdown("<div class='section-header'>📋 Detailed Breakdown</div>", unsafe_allow_html=True)
+
+        # Bar chart
+        breakdown_fig = go.Figure(data=[
+            go.Bar(
+                x=list(contributors.keys()),
+                y=list(contributors.values()),
+                marker=dict(
+                    color=['#4ade80', '#60a5fa', '#fbbf24', '#f87171'],
+                    line=dict(color='rgba(255,255,255,0.2)', width=2)
+                ),
+                text=[f'{v:.0f} kg' for v in contributors.values()],
+                textposition='auto',
+                hovertemplate='<b>%{x}</b><br>%{y:.0f} kg CO₂<extra></extra>'
+            )
+        ])
+
+        breakdown_fig.update_layout(
+            height=350,
+            margin=dict(l=40, r=20, t=20, b=40),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(55, 65, 81, 0.2)',
+            font=dict(color='#d1d5db', size=12),
+            xaxis=dict(
+                showgrid=False,
+                zeroline=False,
+                color='#9ca3af'
+            ),
+            yaxis=dict(
+                showgrid=True,
+                gridwidth=1,
+                gridcolor='rgba(74, 222, 128, 0.1)',
+                zeroline=False,
+                color='#9ca3af'
+            ),
+            showlegend=False
+        )
+
+        st.plotly_chart(breakdown_fig, width="stretch", config={'displayModeBar': False})
+
+        st.markdown("---")
+
+        # -------------------------
+        # AI INSIGHT
+        # -------------------------
+        st.markdown("<div class='section-header'>🤖 AI Insights & Analysis</div>", unsafe_allow_html=True)
+
+        col_insight1, col_insight2 = st.columns([1.2, 0.8])
+
+        with col_insight1:
+            st.markdown(f"""
+            <div class='card-highlight'>
+                <div style='display: flex; gap: 12px; align-items: flex-start;'>
+                    <div style='font-size: 32px;'>💡</div>
                     <div style='flex: 1;'>
-                        <div style='font-size: 15px; line-height: 1.8; color: #d1d5db;'>{r}</div>
+                        <div style='font-size: 16px; font-weight: 800; color: #4ade80; margin-bottom: 12px;'>Key Finding</div>
+                        <div style='font-size: 15px; color: #d1d5db; line-height: 1.8;'>{h(insight)}</div>
                     </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div class='card-highlight'>
-            <div style='display: flex; gap: 16px; align-items: center;'>
-                <div style='font-size: 48px;'>🌟</div>
-                <div>
-                    <div style='font-size: 18px; font-weight: 700; color: #4ade80; margin-bottom: 4px;'>Excellent Work!</div>
-                    <div style='color: #d1d5db;'>Your lifestyle is already very eco-friendly. Keep maintaining these amazing habits!</div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
 
-    st.markdown("---")
-
-    # -------------------------
-    # PDF DOWNLOAD
-    # -------------------------
-    report = generate_pdf(total, eco_score, insight)
-
-    with open(report, "rb") as f:
-        st.download_button(
-            "📄 Download Eco Report (PDF)",
-            f,
-            file_name="EcoBuddy_Report.pdf"
-        )
-
-
-# -------------------------
-# HISTORY & TRACKING
-# -------------------------
-st.markdown("---")
-
-st.markdown("<div class='section-header'>📈 Your Eco Journey</div>", unsafe_allow_html=True)
-
-history = get_assessments()
-
-if history:
-
-    df = pd.DataFrame(history, columns=[
-        "id", "date", "transport", "distance",
-        "electricity", "diet", "flights",
-        "footprint", "eco_score"
-    ])
-
-    latest = history[0]
-
-    # Latest stats
-    stat1, stat2, stat3, stat4 = st.columns(4)
-    
-    with stat1:
-        st.markdown(f"""
-        <div class='card'>
-            <div style='font-size: 12px; color: #9ca3af;'>Latest Footprint</div>
-            <div style='font-size: 28px; font-weight: 900; color: #4ade80;'>{latest[7]:.0f}</div>
-            <div style='font-size: 11px; color: #9ca3af;'>kg CO₂</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with stat2:
-        st.markdown(f"""
-        <div class='card'>
-            <div style='font-size: 12px; color: #9ca3af;'>Latest Score</div>
-            <div style='font-size: 28px; font-weight: 900; color: #4ade80;'>{latest[8]}</div>
-            <div style='font-size: 11px; color: #9ca3af;'>out of 100</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    if len(history) >= 2:
-        prev = history[1][7]
-        change = ((prev - latest[7]) / prev) * 100 if prev else 0
-
-        with stat3:
-            if change > 0:
-                color = "#4ade80"
-                emoji = "📉"
-                label = "Reduced"
-            elif change < 0:
-                color = "#f87171"
-                emoji = "📈"
-                label = "Increased"
-            else:
-                color = "#60a5fa"
-                emoji = "→"
-                label = "No Change"
-            
-            st.markdown(f"""
+        with col_insight2:
+            st.markdown("""
             <div class='card'>
-                <div style='font-size: 12px; color: #9ca3af;'>{emoji} {label}</div>
-                <div style='font-size: 28px; font-weight: 900; color: {color};'>{abs(change):.1f}%</div>
-                <div style='font-size: 11px; color: #9ca3af;'>vs previous</div>
+                <div style='display: flex; gap: 12px; align-items: flex-start;'>
+                    <div style='font-size: 32px;'>🎯</div>
+                    <div style='flex: 1;'>
+                        <div style='font-size: 16px; font-weight: 800; color: #4ade80; margin-bottom: 12px;'>Quick Tips</div>
+                        <ul style='color: #d1d5db; font-size: 14px; line-height: 2.2; padding-left: 20px; margin: 0;'>
+                            <li>Start with small daily changes</li>
+                            <li>Track progress regularly</li>
+                            <li>Share with friends & family</li>
+                            <li>Focus on your biggest source</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
 
-    with stat4:
-        st.markdown(f"""
-        <div class='card'>
-            <div style='font-size: 12px; color: #9ca3af;'>Total Records</div>
-            <div style='font-size: 28px; font-weight: 900; color: #4ade80;'>{len(history)}</div>
-            <div style='font-size: 11px; color: #9ca3af;'>assessments</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("---")
 
+        # -------------------------
+        # RECOMMENDATIONS
+        # -------------------------
+        st.markdown("<div class='section-header'>💡 Personalized Recommendations</div>", unsafe_allow_html=True)
+
+        if len(recommendations) > 0:
+            for idx, r in enumerate(recommendations):
+                st.markdown(f"""
+                <div class='card' style='border-left: 4px solid #22c55e;'>
+                    <div style='display: flex; gap: 12px;'>
+                        <div style='font-size: 24px;'>💚</div>
+                        <div style='flex: 1;'>
+                            <div style='font-size: 15px; line-height: 1.8; color: #d1d5db;'>{h(r)}</div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div class='card-highlight'>
+                <div style='display: flex; gap: 16px; align-items: center;'>
+                    <div style='font-size: 48px;'>🌟</div>
+                    <div>
+                        <div style='font-size: 18px; font-weight: 700; color: #4ade80; margin-bottom: 4px;'>Excellent Work!</div>
+                        <div style='color: #d1d5db;'>Your lifestyle is already very eco-friendly. Keep maintaining these amazing habits!</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("---")
+
+        # -------------------------
+        # PDF DOWNLOAD
+        # -------------------------
+        report = generate_pdf(total, eco_score, insight)
+
+        if report:
+            with open(report, "rb") as f:
+                st.download_button(
+                    "📄 Download Eco Report (PDF)",
+                    f,
+                    file_name="EcoBuddy_Report.pdf"
+                )
+
+
+    # -------------------------
+    # HISTORY & TRACKING
+    # -------------------------
     st.markdown("---")
 
-    # -------------------------
-    # TREND VISUALIZATION
-    # -------------------------
-    st.markdown("<div style='font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #4ade80, #86efac); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px;'>📉 Carbon Footprint Trend</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-header'>📈 Your Eco Journey</div>", unsafe_allow_html=True)
 
-    trend_df = df[["date", "footprint"]].iloc[::-1].reset_index(drop=True)
-    trend_df['date'] = pd.to_datetime(trend_df['date'])
-    
-    trend_fig = go.Figure()
-    trend_fig.add_trace(go.Scatter(
-        x=trend_df['date'],
-        y=trend_df['footprint'],
-        mode='lines+markers',
-        name='Carbon Footprint',
-        line=dict(color='#4ade80', width=3),
-        marker=dict(size=8, color='#4ade80', line=dict(color='#86efac', width=2)),
-        fill='tozeroy',
-        fillcolor='rgba(74, 222, 128, 0.2)',
-        hovertemplate='<b>%{x|%b %d}</b><br>%{y:.0f} kg CO₂<extra></extra>'
-    ))
-    
-    trend_fig.update_layout(
-        height=320,
-        margin=dict(l=40, r=20, t=20, b=40),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(55, 65, 81, 0.2)',
-        font=dict(color='#d1d5db', size=12),
-        xaxis=dict(
-            showgrid=False,
-            zeroline=False,
-            color='#9ca3af'
-        ),
-        yaxis=dict(
-            showgrid=True,
-            gridwidth=1,
-            gridcolor='rgba(74, 222, 128, 0.1)',
-            zeroline=False,
-            color='#9ca3af'
-        ),
-        showlegend=False,
-        hovermode='x unified'
-    )
-    
-    st.plotly_chart(trend_fig, use_container_width=True, config={'displayModeBar': False})
+    history = get_assessments()
 
-    st.markdown("---")
+    if history:
 
-    # -------------------------
-    # HISTORY TABLE
-    # -------------------------
-    st.markdown("<div style='font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #4ade80, #86efac); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px;'>📋 Assessment History</div>", unsafe_allow_html=True)
+        df = pd.DataFrame(history, columns=[
+            "id", "date", "transport", "distance",
+            "electricity", "diet", "flights",
+            "footprint", "eco_score"
+        ])
 
-    # Create a nice table display
-    display_df = df[["date", "transport", "electricity", "footprint", "eco_score"]].copy()
-    display_df.columns = ["📅 Date", "🚗 Transport", "⚡ Electricity (kWh)", "🌍 Footprint (kg CO₂)", "🏆 Score"]
-    display_df = display_df.iloc[::-1].reset_index(drop=True)
-    
-    st.dataframe(display_df)
+        latest = history[0]
 
-    st.markdown("---")
+        # Latest stats
+        stat1, stat2, stat3, stat4 = st.columns(4)
 
-    # -------------------------
-    # STATS & INSIGHTS
-    # -------------------------
-    st.markdown("<div style='font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #4ade80, #86efac); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px;'>📊 Your Statistics</div>", unsafe_allow_html=True)
+        with stat1:
+            st.markdown(f"""
+            <div class='card'>
+                <div style='font-size: 12px; color: #9ca3af;'>Latest Footprint</div>
+                <div style='font-size: 28px; font-weight: 900; color: #4ade80;'>{latest[7]:.0f}</div>
+                <div style='font-size: 11px; color: #9ca3af;'>kg CO₂</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-    stats_col1, stats_col2, stats_col3 = st.columns(3)
-    
-    avg_footprint = df['footprint'].mean()
-    avg_score = df['eco_score'].mean()
-    max_footprint = df['footprint'].max()
-    min_footprint = df['footprint'].min()
-    
-    with stats_col1:
-        st.markdown(f"""
-        <div class='card'>
-            <div style='font-size: 13px; color: #9ca3af; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;'>📊 Average Footprint</div>
-            <div style='font-size: 36px; font-weight: 900; color: #4ade80;'>{avg_footprint:.0f}</div>
-            <div style='font-size: 12px; color: #9ca3af; margin-top: 8px;'>kg CO₂ across {len(history)} records</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with stats_col2:
-        st.markdown(f"""
-        <div class='card'>
-            <div style='font-size: 13px; color: #9ca3af; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;'>🎯 Average Score</div>
-            <div style='font-size: 36px; font-weight: 900; color: #4ade80;'>{avg_score:.0f}</div>
-            <div style='font-size: 12px; color: #9ca3af; margin-top: 8px;'>out of 100 points</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with stats_col3:
-        range_val = max_footprint - min_footprint
-        st.markdown(f"""
-        <div class='card'>
-            <div style='font-size: 13px; color: #9ca3af; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;'>📈 Range Variation</div>
-            <div style='font-size: 28px; font-weight: 700; color: #4ade80;'>{min_footprint:.0f}</div>
-            <div style='font-size: 14px; color: #9ca3af;'>to</div>
-            <div style='font-size: 28px; font-weight: 700; color: #4ade80;'>{max_footprint:.0f}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        with stat2:
+            st.markdown(f"""
+            <div class='card'>
+                <div style='font-size: 12px; color: #9ca3af;'>Latest Score</div>
+                <div style='font-size: 28px; font-weight: 900; color: #4ade80;'>{latest[8]}</div>
+                <div style='font-size: 11px; color: #9ca3af;'>out of 100</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-else:
-    st.markdown("""
-    <div class='card-highlight'>
-        <div style='text-align: center; padding: 48px 32px;'>
-            <div style='font-size: 72px; margin-bottom: 20px; animation: bounce 2s infinite;'>🌱</div>
-            <div style='font-size: 26px; font-weight: 800; background: linear-gradient(135deg, #22c55e, #4ade80); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px;'>No Data Yet</div>
-            <div style='color: #d1d5db; font-size: 16px; line-height: 1.6; max-width: 400px; margin: 0 auto;'>
-                Start your eco journey! Complete the lifestyle profile above and click "Analyze My Impact" to generate your personalized carbon footprint report.
+        if len(history) >= 2:
+            prev = history[1][7]
+            change = ((prev - latest[7]) / prev) * 100 if prev else 0
+
+            with stat3:
+                if change > 0:
+                    color = "#4ade80"
+                    emoji = "📉"
+                    label = "Reduced"
+                elif change < 0:
+                    color = "#f87171"
+                    emoji = "📈"
+                    label = "Increased"
+                else:
+                    color = "#60a5fa"
+                    emoji = "→"
+                    label = "No Change"
+
+                st.markdown(f"""
+                <div class='card'>
+                    <div style='font-size: 12px; color: #9ca3af;'>{emoji} {label}</div>
+                    <div style='font-size: 28px; font-weight: 900; color: {color};'>{abs(change):.1f}%</div>
+                    <div style='font-size: 11px; color: #9ca3af;'>vs previous</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        with stat4:
+            st.markdown(f"""
+            <div class='card'>
+                <div style='font-size: 12px; color: #9ca3af;'>Total Records</div>
+                <div style='font-size: 28px; font-weight: 900; color: #4ade80;'>{len(history)}</div>
+                <div style='font-size: 11px; color: #9ca3af;'>assessments</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("---")
+
+        # -------------------------
+        # TREND VISUALIZATION
+        # -------------------------
+        st.markdown("<div style='font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #4ade80, #86efac); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px;'>📉 Carbon Footprint Trend</div>", unsafe_allow_html=True)
+
+        trend_df = df[["date", "footprint"]].iloc[::-1].reset_index(drop=True)
+        trend_df['date'] = pd.to_datetime(trend_df['date'])
+
+        trend_fig = go.Figure()
+        trend_fig.add_trace(go.Scatter(
+            x=trend_df['date'],
+            y=trend_df['footprint'],
+            mode='lines+markers',
+            name='Carbon Footprint',
+            line=dict(color='#4ade80', width=3),
+            marker=dict(size=8, color='#4ade80', line=dict(color='#86efac', width=2)),
+            fill='tozeroy',
+            fillcolor='rgba(74, 222, 128, 0.2)',
+            hovertemplate='<b>%{x|%b %d}</b><br>%{y:.0f} kg CO₂<extra></extra>'
+        ))
+
+        trend_fig.update_layout(
+            height=320,
+            margin=dict(l=40, r=20, t=20, b=40),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(55, 65, 81, 0.2)',
+            font=dict(color='#d1d5db', size=12),
+            xaxis=dict(
+                showgrid=False,
+                zeroline=False,
+                color='#9ca3af'
+            ),
+            yaxis=dict(
+                showgrid=True,
+                gridwidth=1,
+                gridcolor='rgba(74, 222, 128, 0.1)',
+                zeroline=False,
+                color='#9ca3af'
+            ),
+            showlegend=False,
+            hovermode='x unified'
+        )
+
+        st.plotly_chart(trend_fig, width="stretch", config={'displayModeBar': False})
+
+        st.markdown("---")
+
+        # -------------------------
+        # HISTORY TABLE
+        # -------------------------
+        st.markdown("<div style='font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #4ade80, #86efac); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px;'>📋 Assessment History</div>", unsafe_allow_html=True)
+
+        # Create a nice table display
+        display_df = df[["date", "transport", "electricity", "footprint", "eco_score"]].copy()
+        display_df.columns = ["📅 Date", "🚗 Transport", "⚡ Electricity (kWh)", "🌍 Footprint (kg CO₂)", "🏆 Score"]
+        display_df = display_df.iloc[::-1].reset_index(drop=True)
+
+        st.markdown(
+            "<div class='history-table-wrap'>"
+            + display_df.to_html(index=False, classes="history-table", border=0)
+            + "</div>",
+            unsafe_allow_html=True
+        )
+
+        st.markdown("---")
+
+        # -------------------------
+        # STATS & INSIGHTS
+        # -------------------------
+        st.markdown("<div style='font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #4ade80, #86efac); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px;'>📊 Your Statistics</div>", unsafe_allow_html=True)
+
+        stats_col1, stats_col2, stats_col3 = st.columns(3)
+
+        avg_footprint = df['footprint'].mean()
+        avg_score = df['eco_score'].mean()
+        max_footprint = df['footprint'].max()
+        min_footprint = df['footprint'].min()
+
+        with stats_col1:
+            st.markdown(f"""
+            <div class='card'>
+                <div style='font-size: 13px; color: #9ca3af; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;'>📊 Average Footprint</div>
+                <div style='font-size: 36px; font-weight: 900; color: #4ade80;'>{avg_footprint:.0f}</div>
+                <div style='font-size: 12px; color: #9ca3af; margin-top: 8px;'>kg CO₂ across {len(history)} records</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with stats_col2:
+            st.markdown(f"""
+            <div class='card'>
+                <div style='font-size: 13px; color: #9ca3af; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;'>🎯 Average Score</div>
+                <div style='font-size: 36px; font-weight: 900; color: #4ade80;'>{avg_score:.0f}</div>
+                <div style='font-size: 12px; color: #9ca3af; margin-top: 8px;'>out of 100 points</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with stats_col3:
+            range_val = max_footprint - min_footprint
+            st.markdown(f"""
+            <div class='card'>
+                <div style='font-size: 13px; color: #9ca3af; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;'>📈 Range Variation</div>
+                <div style='font-size: 28px; font-weight: 700; color: #4ade80;'>{min_footprint:.0f}</div>
+                <div style='font-size: 14px; color: #9ca3af;'>to</div>
+                <div style='font-size: 28px; font-weight: 700; color: #4ade80;'>{max_footprint:.0f}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    else:
+        st.markdown("""
+        <div class='card-highlight'>
+            <div style='text-align: center; padding: 48px 32px;'>
+                <div style='font-size: 72px; margin-bottom: 20px; animation: bounce 2s infinite;'>🌱</div>
+                <div style='font-size: 26px; font-weight: 800; background: linear-gradient(135deg, #22c55e, #4ade80); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px;'>No Data Yet</div>
+                <div style='color: #d1d5db; font-size: 16px; line-height: 1.6; max-width: 400px; margin: 0 auto;'>
+                    Start your eco journey! Complete the lifestyle profile above and click "Analyze My Impact" to generate your personalized carbon footprint report.
+                </div>
             </div>
         </div>
+        <style>
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+with tab2:
+    import database as db
+    import energy_audit as ea
+    import plotly.graph_objects as go
+
+    st.markdown("<div class='section-header'>⚡ Home Energy Audit</div>", unsafe_allow_html=True)
+
+    # Init energy db
+    db.init_energy_db()
+
+    st.markdown("### 🔌 Appliance Registry")
+    with st.expander("➕ Add New Appliance", expanded=False):
+        with st.form("appliance_form"):
+            c1, c2, c3 = st.columns(3)
+            app_name = c1.text_input("Appliance Name")
+            app_cat = c2.selectbox("Category", ["AC", "EV Charger", "Heat Pump", "Refrigerator", "Lighting", "Other"])
+            app_qty = c3.number_input("Quantity", min_value=1, value=1)
+
+            c4, c5, c6 = st.columns(3)
+            app_power = c4.number_input("Power Rating (Watts)", min_value=0.0, value=100.0)
+            app_hours = c5.number_input("Hours Used/Day", min_value=0.0, max_value=24.0, value=1.0)
+            app_standby = c6.number_input("Standby Draw (Watts)", min_value=0.0, value=0.0)
+
+            submit_app = st.form_submit_button("Add Appliance")
+            if submit_app and app_name:
+                db.add_appliance(app_name, app_cat, app_qty, app_power, app_hours, app_standby)
+                st.success(f"Added {app_name}")
+                st.rerun()
+
+    appliances = db.get_appliances()
+    if appliances:
+        # Build a styled HTML table instead of st.dataframe
+        category_icons = {"AC": "❄️", "EV Charger": "🔋", "Heat Pump": "🌡️", "Refrigerator": "🧊", "Lighting": "💡", "Other": "🔌"}
+        table_rows = ""
+        for a in appliances:
+            icon = category_icons.get(a['category'], '🔌')
+            table_rows += f"""
+            <tr>
+                <td>{icon} {h(a['name'])}</td>
+                <td><span style='background:rgba(74,222,128,0.15); padding:4px 10px; border-radius:8px; font-size:13px;'>{h(a['category'])}</span></td>
+                <td style='text-align:center;'>{a['quantity']}</td>
+                <td style='text-align:right;'>{a['power_rating_watts']:.0f} W</td>
+                <td style='text-align:right;'>{a['hours_used_per_day']:.1f} h</td>
+                <td style='text-align:right;'>{a['standby_draw_watts']:.1f} W</td>
+            </tr>"""
+
+        st.markdown(f"""
+        <div style='border:1px solid rgba(134,239,172,0.24); border-radius:16px; overflow:hidden; background:#0f172a; box-shadow:0 24px 70px rgba(0,0,0,0.38);'>
+            <table style='width:100%; border-collapse:collapse; color:#fff; font-size:15px;'>
+                <thead>
+                    <tr style='background:#07130d;'>
+                        <th style='padding:14px 18px; text-align:left; font-weight:700; color:#86efac;'>Appliance</th>
+                        <th style='padding:14px 18px; text-align:left; font-weight:700; color:#86efac;'>Category</th>
+                        <th style='padding:14px 18px; text-align:center; font-weight:700; color:#86efac;'>Qty</th>
+                        <th style='padding:14px 18px; text-align:right; font-weight:700; color:#86efac;'>Power</th>
+                        <th style='padding:14px 18px; text-align:right; font-weight:700; color:#86efac;'>Hours/Day</th>
+                        <th style='padding:14px 18px; text-align:right; font-weight:700; color:#86efac;'>Standby</th>
+                    </tr>
+                </thead>
+                <tbody>{table_rows}</tbody>
+            </table>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Delete appliance controls
+        st.markdown("")
+        del_cols = st.columns([3, 1])
+        with del_cols[0]:
+            del_id = st.selectbox("Select appliance to remove", options=[(a['id'], a['name']) for a in appliances], format_func=lambda x: x[1], label_visibility="collapsed")
+        with del_cols[1]:
+            if st.button("🗑️ Remove", key="del_app"):
+                db.delete_appliance(del_id[0])
+                st.rerun()
+
+        # Calculate summaries
+        daily_kwh, monthly_kwh, yearly_kwh = ea.calculate_home_energy_summary(appliances)
+
+        st.markdown("### 📊 Energy Patterns")
+        sc1, sc2, sc3 = st.columns(3)
+        sc1.metric("Daily Consumption", f"{daily_kwh:.2f} kWh")
+        sc2.metric("Monthly Consumption", f"{monthly_kwh:.2f} kWh")
+        sc3.metric("Yearly Consumption", f"{yearly_kwh:.2f} kWh")
+
+        # Hourly profile chart
+        profile = ea.generate_hourly_energy_profile(appliances)
+        fig_hr = go.Figure(data=[go.Bar(x=list(range(24)), y=profile, marker_color='#fbbf24')])
+        fig_hr.update_layout(title="Hourly Energy Demand (kWh)", xaxis_title="Hour of Day", yaxis_title="kWh", template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig_hr, width="stretch")
+
+    else:
+        st.markdown("""
+        <div style='text-align:center; padding:48px 24px; border:1px dashed rgba(134,239,172,0.3); border-radius:16px; background:rgba(15,23,42,0.5);'>
+            <div style='font-size:48px; margin-bottom:12px;'>🔌</div>
+            <div style='font-size:18px; font-weight:600; color:#e5e7eb; margin-bottom:8px;'>No Appliances Yet</div>
+            <div style='font-size:14px; color:#94a3b8;'>Click <b>"➕ Add New Appliance"</b> above to register your first household appliance and start tracking energy consumption.</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown("### ☀️ Solar ROI Calculator")
+
+    sc_form1, sc_form2 = st.columns(2)
+    with sc_form1:
+        roof_space = st.number_input("Available Roof Space (m²)", min_value=0.0, value=30.0)
+        panel_eff = st.number_input("Panel Efficiency (%)", min_value=0.0, max_value=100.0, value=20.0)
+        sun_hours = st.number_input("Peak Sun Hours/Day", min_value=0.0, value=4.5)
+        install_cost = st.number_input("Installation Cost per kW ($)", min_value=0.0, value=2500.0)
+    with sc_form2:
+        util_rate = st.number_input("Utility Rate ($/kWh)", min_value=0.0, value=0.15)
+        maint_cost = st.number_input("Annual Maintenance Cost ($)", min_value=0.0, value=100.0)
+        rate_inc = st.number_input("Annual Rate Increase (%)", min_value=0.0, value=3.0)
+
+    sys_size = ea.calculate_solar_system_size(roof_space, panel_eff)
+    ann_gen = ea.calculate_annual_solar_generation(sys_size, sun_hours)
+    inst_cost = ea.calculate_solar_installation_cost(sys_size, install_cost)
+    ann_savings = ann_gen * util_rate
+    payback = ea.calculate_solar_payback_period(inst_cost, ann_savings)
+    savings_20y = ea.calculate_long_term_solar_savings(ann_gen, util_rate, 20, rate_inc, maint_cost) - inst_cost
+    carbon_offset = ea.calculate_solar_carbon_offset(ann_gen)
+
+    st.markdown("#### 📈 Solar Simulation Results")
+    r1, r2, r3, r4 = st.columns(4)
+    r1.metric("System Size", f"{sys_size:.1f} kW")
+    r2.metric("Annual Generation", f"{ann_gen:.0f} kWh")
+    r3.metric("Est. Installation", f"${inst_cost:,.0f}")
+    r4.metric("Payback Period", f"{payback:.1f} years" if payback != float('inf') else "N/A")
+
+    st.markdown(f"""
+    <div style='padding:18px 24px; border-radius:14px; background:linear-gradient(135deg, rgba(34,197,94,0.15), rgba(74,222,128,0.08)); border:1px solid rgba(74,222,128,0.3); margin-top:8px;'>
+        <span style='font-size:18px;'>💡</span>
+        <span style='color:#e5e7eb; font-size:15px;'>Over 20 years, you could save <b style="color:#4ade80;">${savings_20y:,.0f}</b> and offset <b style="color:#4ade80;">{carbon_offset:,.0f} kg CO₂</b> annually.</span>
     </div>
-    <style>
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-    </style>
     """, unsafe_allow_html=True)
+
