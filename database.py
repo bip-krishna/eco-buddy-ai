@@ -426,3 +426,183 @@ def get_unlocked_badges(user_id):
     finally:
         if conn:
             conn.close()
+
+def init_marketplace_db():
+    conn = None
+    try:
+        import sqlite3
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS journey_profiles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL DEFAULT 1,
+                name TEXT NOT NULL,
+                distance_km REAL NOT NULL,
+                transport_mode TEXT NOT NULL,
+                passenger_count INTEGER DEFAULT 1,
+                trips_per_week INTEGER DEFAULT 1,
+                is_commute BOOLEAN DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS offset_transactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL DEFAULT 1,
+                project_id TEXT NOT NULL,
+                project_name TEXT NOT NULL,
+                offset_tonnes REAL NOT NULL,
+                cost_per_tonne REAL NOT NULL,
+                total_cost REAL NOT NULL,
+                transaction_status TEXT DEFAULT 'completed',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f'Database marketplace init error: {e}')
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+def save_journey_profile(user_id, name, distance_km, transport_mode, passenger_count, trips_per_week, is_commute):
+    conn = None
+    try:
+        import sqlite3
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO journey_profiles (user_id, name, distance_km, transport_mode, passenger_count, trips_per_week, is_commute)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, name, distance_km, transport_mode, passenger_count, trips_per_week, is_commute))
+        
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f'save_journey_profile error: {e}')
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+def get_journey_profiles(user_id):
+    conn = None
+    try:
+        import sqlite3
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM journey_profiles WHERE user_id = ? ORDER BY created_at DESC', (user_id,))
+        columns = [column[0] for column in cursor.description]
+        data = cursor.fetchall()
+        return [dict(zip(columns, row)) for row in data]
+    except Exception:
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+def delete_journey_profile(profile_id):
+    conn = None
+    try:
+        import sqlite3
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM journey_profiles WHERE id = ?', (profile_id,))
+        conn.commit()
+        return True
+    except Exception:
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+def save_offset_transaction(user_id, project_id, project_name, offset_tonnes, cost_per_tonne, total_cost, transaction_status='completed'):
+    conn = None
+    try:
+        import sqlite3
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO offset_transactions (user_id, project_id, project_name, offset_tonnes, cost_per_tonne, total_cost, transaction_status)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, project_id, project_name, offset_tonnes, cost_per_tonne, total_cost, transaction_status))
+        
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f'save_offset_transaction error: {e}')
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+def get_offset_transactions(user_id):
+    conn = None
+    try:
+        import sqlite3
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM offset_transactions WHERE user_id = ? ORDER BY created_at DESC', (user_id,))
+        columns = [column[0] for column in cursor.description]
+        data = cursor.fetchall()
+        return [dict(zip(columns, row)) for row in data]
+    except Exception:
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+def delete_offset_transaction(transaction_id):
+    conn = None
+    try:
+        import sqlite3
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM offset_transactions WHERE id = ?', (transaction_id,))
+        conn.commit()
+        return True
+    except Exception:
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+def get_total_offsets(user_id):
+    conn = None
+    try:
+        import sqlite3
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute('SELECT SUM(offset_tonnes) FROM offset_transactions WHERE user_id = ? AND transaction_status != "reversed"', (user_id,))
+        total = cursor.fetchone()[0]
+        return total if total else 0.0
+    except Exception:
+        return 0.0
+    finally:
+        if conn:
+            conn.close()
+
+def get_total_spend(user_id):
+    conn = None
+    try:
+        import sqlite3
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute('SELECT SUM(total_cost) FROM offset_transactions WHERE user_id = ? AND transaction_status != "reversed"', (user_id,))
+        total = cursor.fetchone()[0]
+        return total if total else 0.0
+    except Exception:
+        return 0.0
+    finally:
+        if conn:
+            conn.close()
