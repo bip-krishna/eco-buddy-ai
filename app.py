@@ -682,6 +682,27 @@ st.markdown("---")
 # -------------------------
 # TABS CONFIGURATION
 # -------------------------
+col_btn1, col_btn2, col_btn3 = st.columns([1, 1.5, 1])
+
+with col_btn1:
+    reset_btn = st.button(
+        "🔄 Reset Assessment",
+        use_container_width=True
+    )
+
+with col_btn2:
+    st.caption("✔ All input fields are validated before analysis.")
+    analyze_btn = st.button(
+        "🌿 Analyze My Impact",
+        use_container_width=True
+    )
+
+if reset_btn:
+    for key in DEFAULT_VALUES:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.success("✅ Assessment form has been reset.")
+    st.rerun()
 tab1, tab2, tab3, tab4 = st.tabs(["🌍 Carbon Footprint", "⚡ Home Energy Audit", "🎮 Gamification", "🗺️ Route Planning & Offsets"])
 
 with tab1:
@@ -831,7 +852,7 @@ with tab1:
             st.rerun()
 
     with col_btn2:
-        analyze_btn = st.button("🌿 Analyze My Impact", use_container_width=True, key="analyze_impact_btn_2")
+        analyze_btn = st.button("🌿 Analyze My Impact", use_container_width=True)
 
     if analyze_btn:
 
