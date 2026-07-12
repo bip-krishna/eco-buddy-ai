@@ -83,18 +83,12 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
     :root {
-        --sky: #b9d7f4;
-        --sky-soft: #d9eafa;
-        --field: #5f8f36;
-        --leaf: #78a945;
-        --moss: #2f5e32;
-        --ink: #080b0a;
-        --muted: #66736a;
-        --paper: rgba(255, 255, 255, 0.76);
-        --paper-strong: rgba(255, 255, 255, 0.92);
-        --line: rgba(38, 64, 41, 0.12);
-        --shadow: 0 24px 70px rgba(38, 67, 44, 0.18);
-        --radius: 18px;
+        --ink: #111827;
+        --muted: #6b7280;
+        --paper: rgba(255,255,255,0.75);
+        --paper-strong: rgba(255,255,255,0.95);
+        --line: rgba(0,0,0,0.08);
+        --shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
 
     * {
@@ -107,17 +101,11 @@ st.markdown("""
 
     body,
     [data-testid="stAppViewContainer"] {
-        font-family: 'Inter', sans-serif;
-        color: var(--ink);
+        color: #1f2937;
         background:
-            linear-gradient(180deg, rgba(185, 215, 244, 0.74) 0%, rgba(244, 248, 240, 0.95) 48%, #f7faf3 100%),
-            radial-gradient(circle at 14% 12%, rgba(255, 255, 255, 0.86), transparent 30%),
-            linear-gradient(135deg, #d7ebff 0%, #f4f8e8 54%, #eaf5df 100%);
-        min-height: 100vh;
-    }
-
-    [data-testid="stHeader"] {
-        background: transparent;
+            radial-gradient(circle at top left, #dcfce7 0%, transparent 30%),
+            radial-gradient(circle at top right, #dbeafe 0%, transparent 30%),
+            #f8fafc !important;
     }
 
     .block-container {
@@ -184,7 +172,9 @@ st.markdown("""
     .metric-card {
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: linear-gradient(145deg, var(--paper-strong), rgba(255, 255, 255, 0.64));
+        background: rgba(255,255,255,0.9);
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
         box-shadow: 0 18px 50px rgba(57, 86, 47, 0.12);
         backdrop-filter: blur(18px);
         position: relative;
@@ -352,313 +342,7 @@ st.markdown("""
         background: rgba(172, 214, 111, 0.26) !important;
     }
 
-    /* DARK PREMIUM THEME OVERRIDES */
-    :root {
-        --sky: #8ec5ff;
-        --sky-soft: #18273a;
-        --field: #4ade80;
-        --leaf: #58d27b;
-        --moss: #86efac;
-        --ink: #f8fafc;
-        --muted: #a7b3c6;
-        --paper: rgba(15, 23, 42, 0.76);
-        --paper-strong: rgba(12, 18, 32, 0.92);
-        --line: rgba(148, 163, 184, 0.18);
-        --shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
-        --radius: 18px;
-    }
-
-    body,
-    [data-testid="stAppViewContainer"] {
-        color: var(--ink);
-        background:
-            radial-gradient(circle at 18% 8%, rgba(74, 222, 128, 0.22), transparent 28%),
-            radial-gradient(circle at 84% 12%, rgba(96, 165, 250, 0.18), transparent 30%),
-            linear-gradient(145deg, #030712 0%, #07130d 42%, #111827 100%) !important;
-    }
-
-    .block-container {
-        padding-top: 28px;
-    }
-
-    [data-testid="stSidebar"] {
-        background: rgba(3, 7, 18, 0.84);
-        border-right: 1px solid var(--line);
-        box-shadow: 18px 0 48px rgba(0, 0, 0, 0.26);
-    }
-
-    [data-testid="stSidebar"] * {
-        color: var(--ink);
-    }
-
-    .title {
-        color: var(--ink);
-        text-shadow: 0 18px 48px rgba(74, 222, 128, 0.18);
-    }
-
-    .subtitle,
-    .section-header {
-        color: var(--ink);
-    }
-
-    .subtitle {
-        color: var(--muted);
-    }
-
-    .input-section,
-    .card,
-    .card-highlight,
-    .metric-card {
-        background:
-            linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(17, 24, 39, 0.72)),
-            linear-gradient(135deg, rgba(74, 222, 128, 0.08), transparent);
-        border-color: var(--line);
-        box-shadow: var(--shadow);
-    }
-
-    .card-highlight {
-        background:
-            linear-gradient(145deg, rgba(13, 36, 25, 0.92), rgba(12, 18, 32, 0.84)),
-            linear-gradient(135deg, rgba(74, 222, 128, 0.14), transparent);
-    }
-
-    .metric-card::before,
-    .card-highlight::before,
-    .section-header::after {
-        background: linear-gradient(90deg, #4ade80, #86efac, rgba(96, 165, 250, 0));
-    }
-
-    .progress-bar {
-        background: rgba(148, 163, 184, 0.14);
-    }
-
-    .progress-fill {
-        background: linear-gradient(90deg, #16a34a, #4ade80, #86efac);
-    }
-
-    .stTextInput > div > div > input,
-    .stNumberInput input,
-    .stSelectbox [data-baseweb="select"],
-    .stTextArea textarea {
-        background: #e6f5e9 !important;
-        border-color: rgba(74, 222, 128, 0.4) !important;
-        color: #05070a !important;
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
-    }
-
-    .stTextInput label,
-    .stNumberInput label,
-    .stSelectbox label,
-    [data-testid="stWidgetLabel"],
-    [data-testid="stWidgetLabel"] p {
-        color: #ffffff !important;
-        opacity: 1 !important;
-        font-weight: 800 !important;
-    }
-
-    .stSelectbox [data-baseweb="select"] *,
-    .stNumberInput input,
-    .stTextInput input,
-    .stTextArea textarea {
-        color: #05070a !important;
-        -webkit-text-fill-color: #05070a !important;
-    }
-
-    .stButton > button,
-    .stDownloadButton > button,
-    [data-testid="stFormSubmitButton"] > button {
-        background: linear-gradient(135deg, #0b0f18, #111827) !important;
-        color: #ffffff !important;
-        border: 1px solid rgba(134, 239, 172, 0.28) !important;
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32) !important;
-    }
-    .stButton > button:hover,
-    .stDownloadButton > button:hover,
-    [data-testid="stFormSubmitButton"] > button:hover {
-        background: linear-gradient(135deg, #111827, #0f2a1a) !important;
-        border-color: rgba(134, 239, 172, 0.55) !important;
-    }
-
-    .stInfo,
-    .stWarning,
-    .stSuccess,
-    .stError {
-        color: var(--ink) !important;
-        background: rgba(15, 23, 42, 0.78) !important;
-        border-color: var(--line) !important;
-    }
-
-    [style*="#d1d5db"],
-    [style*="#9ca3af"],
-    [style*="rgb(209, 213, 219)"],
-    [style*="rgb(156, 163, 175)"] {
-        color: var(--muted) !important;
-    }
     
-    [style*="#4ade80"],
-    [style*="rgb(74, 222, 128)"] {
-        color: var(--moss) !important;
-    }
-
-    [data-testid="stDataFrame"] {
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid var(--line);
-        box-shadow: var(--shadow);
-        background: var(--paper-strong) !important;
-    }
-
-    [data-testid="stDataFrame"] > div,
-    [data-testid="stDataFrame"] iframe,
-    [data-testid="stDataFrame"] [class*="stDataFrame"],
-    [data-testid="stDataFrame"] [class*="dataframe"],
-    [data-testid="stDataFrame"] [class*="glide"],
-    [data-testid="stDataFrame"] [class*="table"] {
-        background: transparent !important;
-    }
-
-    [data-testid="stDataFrame"] canvas {
-        background: transparent !important;
-    }
-
-    [data-testid="stDataFrame"] button,
-    [data-testid="stDataFrame"] [role="button"] {
-        background: rgba(255, 255, 255, 0.8) !important;
-        color: var(--ink) !important;
-        border-color: var(--line) !important;
-    }
-
-    [data-testid="stDataFrame"] svg {
-        color: var(--ink) !important;
-        fill: var(--ink) !important;
-    }
-
-    [data-testid="stDataFrame"] [role="grid"],
-    [data-testid="stDataFrame"] [role="row"],
-    [data-testid="stDataFrame"] [role="columnheader"],
-    [data-testid="stDataFrame"] [role="gridcell"] {
-        background-color: transparent !important;
-        border-color: var(--line) !important;
-    }
-
-    [data-testid="stDataFrame"] [role="columnheader"] {
-        background-color: var(--sky-soft) !important;
-        color: var(--moss) !important;
-        font-weight: 800 !important;
-    }
-
-    .history-table-wrap {
-        width: 100%;
-        overflow-x: auto;
-        border: 1px solid rgba(134, 239, 172, 0.24);
-        border-radius: 16px;
-        background: #0f172a;
-        box-shadow: var(--shadow);
-    }
-
-    .history-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #0f172a;
-        color: #ffffff;
-        font-size: 15px;
-    }
-
-    .history-table thead th {
-        padding: 16px 18px;
-        background: #07130d;
-        color: #ffffff !important;
-        border-bottom: 1px solid rgba(134, 239, 172, 0.3);
-        font-weight: 800;
-        text-align: left;
-        white-space: nowrap;
-    }
-
-    .history-table tbody td {
-        padding: 15px 18px;
-        color: #ffffff !important;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-        text-align: left;
-    }
-
-    .history-table tbody tr:nth-child(odd) {
-        background: #0f172a;
-    }
-
-    .history-table tbody tr:nth-child(even) {
-        background: #111827;
-    }
-
-    .history-table tbody tr:hover {
-        background: rgba(34, 197, 94, 0.14);
-    }
-
-    @keyframes fadeUp {
-        from {
-            opacity: 0;
-            transform: translateY(18px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @media (max-width: 760px) {
-        .block-container {
-            padding: 16px 14px 42px;
-        }
-
-        .input-section,
-        .card,
-        .card-highlight,
-        .metric-card {
-            padding: 22px;
-        }
-    }
-
-    button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
-        color: #d1d5db !important;
-        font-weight: 600 !important;
-    }
-    
-    button[data-baseweb="tab"][aria-selected="true"] > div[data-testid="stMarkdownContainer"] > p {
-        color: #4ade80 !important;
-        font-weight: 800 !important;
-    }
-    
-    [data-testid="stExpander"] {
-        background: #0f172a !important;
-        border: 1px solid rgba(134, 239, 172, 0.28) !important;
-        border-radius: 8px !important;
-        overflow: hidden;
-    }
-    
-    [data-testid="stExpander"] details {
-        background: #0f172a !important;
-    }
-
-    [data-testid="stExpander"] summary {
-        background-color: #0f172a !important;
-    }
-    
-    [data-testid="stExpander"] summary:hover {
-        background-color: #1e293b !important;
-    }
-
-    [data-testid="stExpander"] summary,
-    [data-testid="stExpander"] summary p,
-    [data-testid="stExpander"] summary span,
-    [data-testid="stExpander"] summary svg {
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        fill: #ffffff !important;
-    }
-    
-    [data-testid="stExpanderDetails"] {
-        background-color: #0f172a !important;
-        color: #d1d5db !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -715,7 +399,7 @@ with tab1:
     # QUICK LOG (AI)
     # -------------------------
     st.markdown("### 🤖 AI Quick Log")
-    col_ai_input, col_ai_btn = st.columns([4, 1], vertical_alignment="bottom")
+    col_ai_input, col_ai_btn = st.columns([4, 1])
     with col_ai_input:
         quick_log_text = st.text_area("Let AI auto-fill your profile! Describe your day naturally.", placeholder="e.g., 'I drove 15 miles in my SUV and had a beef steak'", key="quick_log_input", height=68)
     with col_ai_btn:
@@ -781,7 +465,7 @@ with tab1:
 
         electricity = st.number_input("Monthly Electricity (kWh)", min_value=0.0, value=float(st.session_state.extracted_kwh), step=10.0)
         diet = st.selectbox("Diet Type", ["Vegetarian", "Non-Vegetarian"])
-
+    
         col1, col2 = st.columns(2)
     with col3:
         st.markdown("""
@@ -792,26 +476,9 @@ with tab1:
         """, unsafe_allow_html=True)
         flights = st.number_input("Annual Flights", min_value=0, value=0, step=1)
         st.info("💡 How many long-distance flights per year?")
+        
 
-        with col1:
-            st.metric(
-                "🌍 Total Footprint",
-                f"{data['total']:.2f} kg CO₂"
-            )
-
-        with col2:
-            st.metric(
-                "🌱 Eco Score",
-                f"{data['eco_score']}/100"
-            )
-
-        st.markdown("### 💡 AI Insight")
-        st.info(data["insight"])
-
-        st.markdown("### 🌱 Recommendations")
-
-        for rec in data["recommendations"]:
-            st.success(rec)    
+    
     # PDF REPORT GENERATION
     # -------------------------
     def generate_pdf(total, eco_score, insight):
@@ -843,7 +510,7 @@ with tab1:
     #     analyze_btn = st.button("🌿 Analyze My Impact")
     col_btn1, col_btn2, col_btn3 = st.columns([1, 1.5, 1])
     with col_btn1:
-        reset_btn = st.button("🔄 Reset Assessment", use_container_width=True)
+        reset_btn = st.button("🔄 Reset Assessment")
         if reset_btn:
             for key in DEFAULT_VALUES:
                 if key in st.session_state:
@@ -852,7 +519,7 @@ with tab1:
             st.rerun()
 
     with col_btn2:
-        analyze_btn = st.button("🌿 Analyze My Impact", use_container_width=True)
+        analyze_btn = st.button("🌿 Analyze My Impact")
 
     if analyze_btn:
 
@@ -1644,7 +1311,6 @@ with tab4:
                 st.rerun()
         else:
             st.info("No transactions yet. Visit the marketplace to start your portfolio!")
-else:
     st.markdown("""
     <style>
     @keyframes bounce {
