@@ -1,6 +1,8 @@
 # EcoBuddy AI
 
-EcoBuddy AI is a polished Streamlit-based web application that helps users track, analyze, and reduce their personal carbon footprint using lifestyle inputs.
+EcoBuddy AI is a Streamlit app that estimates personal carbon emissions from lifestyle inputs, visualizes the largest contributors, and suggests changes.
+
+[Installation](#installation) · [Features](#features) · [Upstream project](https://github.com/neeru24/eco-buddy-ai)
 
 It converts daily habits into:
 - Carbon emissions
@@ -8,7 +10,7 @@ It converts daily habits into:
 - Visual insights
 - Personalized recommendations
   
-# Features
+## Features
 - Friendly lifestyle input form for transport, electricity, diet, and flights
 - Annual carbon footprint calculation with contributor breakdown
 - Eco score and badge system for instant impact feedback
@@ -19,7 +21,7 @@ It converts daily habits into:
 
 ---
 
-# Installation
+## Installation
 
 1. Clone or download the repository
 
@@ -48,7 +50,7 @@ cp .env.example .env
 ```
 Open `.env` and replace `your_api_key_here` with your actual Carbon API key (e.g., from Climatiq). If no key is provided, the app will gracefully fall back to using static, offline emission factors.
 
-## Run the app
+### Run the app
 
 ```bash
 streamlit run app.py
@@ -58,7 +60,7 @@ Then open the local Streamlit link shown in your terminal.
 
 ---
 
-# Project Structure
+## Project Structure
 
 
 ```bash
@@ -86,7 +88,7 @@ eco-buddy-ai/
 
 ---
 
-# How It Works
+## How It Works
 1. User enters lifestyle data
 2. System calculates carbon emissions
 3. Eco score is generated
@@ -97,7 +99,7 @@ eco-buddy-ai/
 
 ---
 
-# Key Modules
+## Key Modules
 
 database.py → Stores user data (SQLite)
 
@@ -109,12 +111,12 @@ app.py → Streamlit UI + dashboard
 
 ---
 
-# Project Goal
+## Project Goal
 Help users understand their carbon footprint and encourage sustainable lifestyle changes through simple insights and tracking.
 
 ---
 
-# Output
+## Output
 - Carbon footprint (kg CO₂/year)
 - Eco score (0–100)
 - Emission breakdown chart
@@ -123,7 +125,7 @@ Help users understand their carbon footprint and encourage sustainable lifestyle
 
 ---
 
-# Testing
+## Testing
 
 ```bash
 python test_db.py
@@ -133,7 +135,7 @@ python test_recommendations.py
 
 ---
 
-# Tech Stack
+## Tech Stack
 - Python
 - Streamlit
 - Pandas
